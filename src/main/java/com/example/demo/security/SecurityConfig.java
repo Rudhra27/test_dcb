@@ -19,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtTokenFilter jwtFilter;
+
     private final UserDetailsServiceImpl userDetailsService;
 
     @Bean
