@@ -1,11 +1,12 @@
 package com.example.demo.service;
 
+import com.example.demo.event.NotificationEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -14,29 +15,27 @@ import java.util.concurrent.TimeUnit;
 public class OtpService {
 
     private final StringRedisTemplate redisTemplate;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public OtpService(StringRedisTemplate redisTemplate, EmailService emailService) {
+    public OtpService(StringRedisTemplate redisTemplate, ApplicationEventPublisher eventPublisher) {
         this.redisTemplate = redisTemplate;
-        this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
-    public boolean generateAndSendOtp(String email, String username) throws IOException {
-        // generate random 6 digit OTP
+    public boolean generateAndSendOtp(String email, String username) {
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
 
-        // send OTP to email
-        boolean sent = emailService.sendEmail(email, otp);
-        if (sent) {
-            // store OTP in Redis with 5 min expiry
-            redisTemplate.opsForValue().set("OTP_" + username, otp, 5, TimeUnit.MINUTES);
-            log.info("OTP generated and sent for user {}", username);
-            return true;
-        } else {
-            log.warn("Failed to send OTP for user {}", username);
-            return false;
-        }
+        // publish email notification event
+        eventPublisher.publishEvent(
+                new NotificationEvent(this, "email", email, "OTP for TestDCB login - " + otp)
+        );
+
+        // store OTP in Redis
+        redisTemplate.opsForValue().set("OTP_" + username, otp, 5, TimeUnit.MINUTES);
+        log.info("OTP generated and event published for {}", username);
+
+        return true;
     }
 
     public boolean verifyOtp(String username, String enteredOtp) {
@@ -50,4 +49,3 @@ public class OtpService {
         return false;
     }
 }
-

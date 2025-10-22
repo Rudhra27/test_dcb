@@ -1,6 +1,6 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.5.5"
+	id("org.springframework.boot") version "3.3.5"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -20,8 +20,20 @@ configurations {
 	}
 }
 
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
+	}
+}
+
 repositories {
 	mavenCentral()
+	maven {
+		url = uri("https://repo.spring.io/release")
+	}
+	maven {
+		url = uri("https://repo.spring.io/milestone")
+	}
 }
 
 dependencies {
@@ -29,6 +41,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation ("org.springframework.boot:spring-boot-starter-validation")
+	implementation ("org.springframework.cloud:spring-cloud-starter-openfeign")
+	implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
 	implementation("org.liquibase:liquibase-core")
 	implementation ("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation ("com.sendgrid:sendgrid-java:4.9.3")
@@ -48,3 +62,4 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
